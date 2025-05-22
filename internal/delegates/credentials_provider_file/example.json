@@ -1,0 +1,23 @@
+[
+    {
+        "realm_id": "3d038b0f-bcde-443a-817d-68f6723699b9",
+        "user_id": "831f0a5d-cd8d-4d12-930b-95be01a490da",
+        "role": "admin",
+        "login": "alice",
+        "pwdhash": "$2a$10$WMOYxNkm401Q72BDdngA8OxNFtq2QPg.0gci49wFo54rKAyHpCm4K"
+    },
+    {
+        "realm_id": "3d038b0f-bcde-443a-817d-68f6723699b9",
+        "user_id": "61f2892e-a31e-4cf8-9b0f-5f38b7c2f4dd",
+        "role": "staff",
+        "login": "bot_01",
+        "pwdhash": "$2a$10$HaIM8xZXYusrS9Lt84qHTeU9ZoXr7sJI4No5QF0L2mc7RuQhhLFHS"
+    },
+    {
+        "realm_id": "3d038b0f-bcde-443a-817d-68f6723699b9",
+        "user_id": "3a69697c-e1a9-418b-9cad-71799c4b5990",
+        "role": "staff",
+        "login": "bot_02",
+        "pwdhash": "$2a$10$/FXD0uUn6g2aYHBAMrtlKOsD3FmzoqP.GH7L/Ut2p0lrgPtjH2szK"
+    }
+]
