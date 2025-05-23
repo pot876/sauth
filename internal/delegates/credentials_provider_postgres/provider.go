@@ -2,6 +2,7 @@ package credentials_provider_postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/pot876/sauth/internal/chain"
 	"github.com/prometheus/client_golang/prometheus"
@@ -13,6 +14,8 @@ import (
 
 type Provider struct {
 	conn *pgxpool.Pool
+
+	metricsBcryptTimings prometheus.Histogram
 }
 
 func New(conn *pgxpool.Pool) chain.ICredentialsProvider {
@@ -34,17 +37,35 @@ func (p *Provider) ValidateAuth(ctx context.Context, realmID uuid.UUID, login, p
 		return nil, err
 	}
 
-	err = bcrypt.CompareHashAndPassword(authInfo.Pwdhash, []byte(password))
+	err = p.compareHashAndPassword([]byte(authInfo.Pwdhash), password)
 	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return nil, chain.ErrBadPassword
-		}
 		return nil, err
 	}
 
+	authInfo.Pwdhash = nil
 	return authInfo, nil
 }
 
-func (a *Provider) RegisterMetrics(r prometheus.Registerer) {
+func (p *Provider) compareHashAndPassword(hashedPassword, password []byte) error {
+	t0 := time.Now()
+	err := bcrypt.CompareHashAndPassword(hashedPassword, password)
+	p.metricsBcryptTimings.Observe(float64(time.Since(t0).Seconds()))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return chain.ErrBadPassword
+		}
+		return err
+	}
 
+	return nil
+}
+
+func (a *Provider) RegisterMetrics(r prometheus.Registerer, prefix string) {
+	a.metricsBcryptTimings = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    prefix + "bcrypt_timings",
+		Help:    "",
+		Buckets: []float64{.1, .2, .3, .5, 1., 2.},
+	})
+
+	r.MustRegister(a.metricsBcryptTimings)
 }

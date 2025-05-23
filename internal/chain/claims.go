@@ -2,10 +2,16 @@ package chain
 
 import "time"
 
+const (
+	TypAccess  = "ac"
+	TypRefresh = "re"
+)
+
 type Claims struct {
 	ExpiresAt int64  `json:"exp,omitempty"`
 	IssuedAt  int64  `json:"iat,omitempty"`
 	KeyID     string `json:"kid,omitempty"`
+	Typ       string `json:"typ,omitempty"`
 
 	Issuer    string `json:"iss,omitempty"`
 	SessionID string `json:"sid,omitempty"`

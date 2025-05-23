@@ -49,7 +49,7 @@ func runHttpServer(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 	api.RegisterEndpoints(cfg, r)
-	api.RegisterMetrics(prometheus.DefaultRegisterer)
+	api.RegisterMetrics(prometheus.DefaultRegisterer, "")
 
 	if cfg.HTTPEndpointMetrics != "" {
 		r.GET(cfg.HTTPEndpointMetrics, metrics.MetricsHandlerGin())

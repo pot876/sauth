@@ -9,6 +9,8 @@ import (
 )
 
 type AuthServiceConfig struct {
+	Issuer string
+
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
 

@@ -8,9 +8,9 @@ import (
 type FileUserInfo struct {
 	RealmID string `json:"realm_id"`
 	UserID  string `json:"user_id"`
-	Role    string `json:"role"`
-	Login   string `json:"login"`
-	Pwdhash string `json:"pwdhash"`
+	Role    string `json:"role,omitempty"`
+	Login   string `json:"login,omitempty"`
+	Pwdhash string `json:"pwdhash,omitempty"`
 }
 
 func ReadUsers(path string) ([]*FileUserInfo, error) {

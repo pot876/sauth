@@ -8,10 +8,10 @@ import (
 )
 
 type UserAuthInfo struct {
-	RealmID uuid.UUID
-	UserID  uuid.UUID
-	Role    string
-	Pwdhash []byte
+	RealmID uuid.UUID `json:"realm_id"`
+	UserID  uuid.UUID `json:"user_id"`
+	Role    string    `json:"role,omitempty"`
+	Pwdhash []byte    `json:"pwdhash,omitempty"`
 }
 
 func AuthInfoByLogin(ctx context.Context, db DB, realmID uuid.UUID, login string) (*UserAuthInfo, error) {

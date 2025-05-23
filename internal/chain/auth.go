@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/pot876/sauth/internal/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
@@ -103,7 +104,7 @@ func (s *AuthService) issueTokensOnLogin(authInfo any) (string, string, *Claims,
 		ExpiresAt: now.Add(cfgPointer.AccessTokenTTL).Unix(),
 		IssuedAt:  now.Unix(),
 
-		Issuer:    "TODO",
+		Issuer:    cfgPointer.Issuer,
 		SessionID: sessionID,
 		Nonce:     uuid.NewString(),
 		Seq:       0,
@@ -148,11 +149,21 @@ func (s *AuthService) refreshValidateToken(_ context.Context, refreshToken []byt
 		return key, nil
 	})
 	if err != nil {
+		if e, ok := err.(*jwt.ValidationError); ok {
+			switch e.Inner {
+			case ErrUnexpectedSigningMethod, ErrInvalidToken, ErrKeyNotFound:
+				return nil, e.Inner
+			}
+		}
 		return nil, err
 	}
 
 	claims, ok := tokenDecoded.Claims.(*Claims)
 	if !ok || !tokenDecoded.Valid {
+		return nil, ErrInvalidToken
+	}
+
+	if claims.Typ != TypRefresh {
 		return nil, ErrInvalidToken
 	}
 
@@ -184,6 +195,7 @@ func (s *AuthService) issueTokensOnRefresh(claims *Claims) (string, string, erro
 
 func (s *AuthService) issueAccessToken(claims *Claims) (string, error) {
 	cfgPointer := s.getConfig()
+	claims.Typ = TypAccess
 	accessToken, err := newWithClaims(jwt.SigningMethodRS256, claims, cfgPointer.AccessKeyID).SignedString(cfgPointer.AccessPrivateKey)
 	if err != nil {
 		return "", fmt.Errorf("sign access token err: %w", err)
@@ -194,6 +206,7 @@ func (s *AuthService) issueAccessToken(claims *Claims) (string, error) {
 
 func (s *AuthService) issueRefreshToken(claims *Claims) (string, error) {
 	cfgPointer := s.getConfig()
+	claims.Typ = TypRefresh
 	refreshToken, err := newWithClaims(jwt.SigningMethodRS256, claims, cfgPointer.RefreshKeyID).SignedString(cfgPointer.RefreshPrivateKey)
 	if err != nil {
 		return "", fmt.Errorf("sign refresh token err: %w", err)
@@ -217,8 +230,8 @@ func (s *AuthService) log(format string, v ...any) {
 	}
 }
 
-func (s *AuthService) RegisterMetrics(r prometheus.Registerer) {
-
+func (s *AuthService) RegisterMetrics(r prometheus.Registerer, prefix string) {
+	_ = util.RegisterMetrics(s.credentialProvider, r, prefix)
 }
 
 func newWithClaims(method jwt.SigningMethod, claims jwt.Claims, keyID string) *jwt.Token {

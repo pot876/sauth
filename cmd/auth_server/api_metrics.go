@@ -19,10 +19,10 @@ type ApiMetrics struct {
 	refreshDurationsXXX prometheus.Observer
 }
 
-func (a *ApiMetrics) setupMetrics() {
+func (a *ApiMetrics) setupMetrics(namePrefix string) {
 	a.metricsCounters = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "http_counter",
+			Name: namePrefix + "http_counter",
 			Help: "",
 		},
 		[]string{"prefix", "status"},
@@ -37,7 +37,7 @@ func (a *ApiMetrics) setupMetrics() {
 
 	a.metricsBuckets = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "http_histogram",
+			Name:    namePrefix + "http_histogram",
 			Help:    "",
 			Buckets: []float64{.005, .015, .030, .1, .3},
 		},
@@ -50,8 +50,8 @@ func (a *ApiMetrics) setupMetrics() {
 	a.refreshDurationsXXX = a.metricsBuckets.WithLabelValues("refresh", "XXX")
 }
 
-func (a *ApiMetrics) registerMetrics(r prometheus.Registerer) {
-	a.setupMetrics()
+func (a *ApiMetrics) registerMetrics(r prometheus.Registerer, prefix string) {
+	a.setupMetrics(prefix)
 
 	r.MustRegister(a.metricsCounters)
 	r.MustRegister(a.metricsBuckets)

@@ -45,6 +45,12 @@ func (s *ValidateService) Validate(_ context.Context, token string) error {
 		return key, nil
 	})
 	if err != nil {
+		if e, ok := err.(*jwt.ValidationError); ok {
+			switch e.Inner {
+			case ErrUnexpectedSigningMethod, ErrInvalidToken, ErrKeyNotFound:
+				return e.Inner
+			}
+		}
 		return err
 	}
 
@@ -60,6 +66,6 @@ func (s *ValidateService) Info(_ context.Context, token string) (any, error) {
 	return nil, nil
 }
 
-func (s *ValidateService) RegisterMetrics(r prometheus.Registerer) {
+func (s *ValidateService) RegisterMetrics(r prometheus.Registerer, prefix string) {
 
 }

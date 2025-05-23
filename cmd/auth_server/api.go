@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pot876/sauth/internal/chain"
 	"github.com/pot876/sauth/internal/config"
+	"github.com/pot876/sauth/internal/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog/log"
 )
@@ -148,6 +149,12 @@ func (a *Api) refresh(c *gin.Context) {
 
 	resp, err := a.auth.Refresh(ctx, []byte(req.Token))
 	if err != nil {
+		switch err {
+		case chain.ErrUnexpectedSigningMethod, chain.ErrInvalidToken, chain.ErrKeyNotFound:
+			c.String(http.StatusUnauthorized, "invalid token")
+			return
+		}
+
 		log.Error().Err(err).Caller().Send()
 		c.Status(http.StatusInternalServerError)
 		return
@@ -231,24 +238,14 @@ func (a *Api) RegisterEndpoints(cfg *config.Config, r *gin.Engine) {
 	}
 }
 
-func (a *Api) RegisterMetrics(r prometheus.Registerer) {
-	a.metrics.registerMetrics(r)
+func (a *Api) RegisterMetrics(r prometheus.Registerer, prefix string) {
+	a.metrics.registerMetrics(r, prefix)
 	log.Info().Msgf("metrics registered for http")
 
-	if registerMetrics(a.auth, r) {
+	if util.RegisterMetrics(a.auth, r, prefix) {
 		log.Info().Msgf("metrics registered for auth component")
 	}
-	if registerMetrics(a.validate, r) {
+	if util.RegisterMetrics(a.validate, r, prefix) {
 		log.Info().Msgf("metrics registered for validate component")
 	}
-}
-
-func registerMetrics(in any, r prometheus.Registerer) bool {
-	reg, hasReg := in.(interface{ RegisterMetrics(prometheus.Registerer) })
-	if !hasReg {
-		return false
-	}
-
-	reg.RegisterMetrics(r)
-	return true
 }

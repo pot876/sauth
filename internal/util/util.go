@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func DecodeKeyPair(privateKey, publicKey string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
@@ -47,4 +48,16 @@ func PrivateKeyDecode(privateKey string) (*rsa.PrivateKey, error) {
 	}
 
 	return key, nil
+}
+
+func RegisterMetrics(in any, r prometheus.Registerer, prefix string) bool {
+	reg, hasReg := in.(interface {
+		RegisterMetrics(prometheus.Registerer, string)
+	})
+	if !hasReg {
+		return false
+	}
+
+	reg.RegisterMetrics(r, prefix)
+	return true
 }
